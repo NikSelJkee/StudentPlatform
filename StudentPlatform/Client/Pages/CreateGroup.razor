@@ -1,0 +1,76 @@
+﻿@page "/students/createGroup"
+
+@inject NavigationManager navigationManager
+
+<div class="row">
+    <div class="col-6">
+        <EditForm Model="Group" OnValidSubmit="Create">
+            <div class="col-6">
+                <h3>Создать группу</h3>
+            </div>
+            <div>
+                <DataAnnotationsValidator />
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <InputText class="form-control" @bind-Value="Group.Name" placeholder="Введите название группы"></InputText>
+                        <ValidationMessage For="(() => Group.Name)"></ValidationMessage>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-primary" type="submit">Добавить</button>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название группы</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var group in Groups)
+        {
+            <tr>
+                <td><a href="students/@group.Id">@group.Name</a></td>
+                <td>
+                    <a class="btn btn-primary" href="students/editGroup/@group.Id">Редактировать</a>
+                    <a class="btn btn-danger text-white" href="#" @onclick="(() => Delete(group.Id))">Удалить</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private GroupForCreationDto Group = new GroupForCreationDto();
+    private IEnumerable<GroupDto> Groups { get; set; } = new List<GroupDto>();
+
+    private HttpClient client;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        client = new HttpClient();
+        Groups = await client.GetFromJsonAsync<IEnumerable<GroupDto>>("http://localhost:5000/api/groups");
+    }
+
+    public async Task Create()
+    {
+        var result = await client.PostAsJsonAsync($"http://localhost:5000/api/groups", Group);
+
+        if (result.IsSuccessStatusCode)
+            navigationManager.NavigateTo("students/createGroup", true);
+    }
+
+    public async Task Delete(int groupId)
+    {
+        var result = await client.DeleteAsync($"http://localhost:5000/api/groups/{groupId}");
+
+        if (result.IsSuccessStatusCode)
+            navigationManager.NavigateTo("students/createGroup", true);
+    }
+}

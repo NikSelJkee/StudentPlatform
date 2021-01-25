@@ -1,0 +1,53 @@
+﻿@page "/tests/editTag/{tagId:int}"
+
+@inject NavigationManager navigationManager
+
+<div class="row">
+    <div class="col-6">
+        <EditForm Model="Tag" OnValidSubmit="Update">
+            <div class="col-6">
+                <h3>Редактировать группу</h3>
+            </div>
+            <div class="row px-2 mx-2 border">
+                <DataAnnotationsValidator />
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <InputText class="form-control" @bind-Value="Tag.Name" placeholder="Введите название группы"></InputText>
+                        <ValidationMessage For="(() => Tag.Name)"></ValidationMessage>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-primary" type="submit">Принять</button>
+                        <a class="btn btn-danger" href="tests/createTag">Назад</a>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int TagId { get; set; }
+
+    private TagForUpdateDto Tag = new TagForUpdateDto();
+
+    private HttpClient client = new HttpClient();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        client = new HttpClient();
+        var tag = await client.GetFromJsonAsync<TagDto>($"http://localhost:5000/api/tags/{TagId}");
+
+        Tag.Name = tag.Name;
+    }
+
+    public async Task Update()
+    {
+        var result = await client.PutAsJsonAsync<TagForUpdateDto>($"http://localhost:5000/api/tags/{TagId}", Tag);
+
+        if (result.IsSuccessStatusCode)
+            navigationManager.NavigateTo("tests/createTag", true);
+    }
+}

@@ -1,0 +1,76 @@
+﻿@page "/auth/login"
+@layout AuthLayout
+
+@inject NavigationManager navigationManager
+
+<div class="row">
+    <div class="col-12">
+        <EditForm Model="User" OnValidSubmit="LoginUser">
+            <div class="container">
+                <div class="row px-2 mx-2 border">
+                    <DataAnnotationsValidator />
+                </div>
+                <div class="col-12" style="border-bottom: 1px solid #325d88">
+                    <h3 class="h3 text-center">Авторизация</h3>
+                </div>
+                <div class="col-12">
+                    <div class="form-group row">
+                        <div class="col-6">
+                            <label>Имя пользователя</label>
+                        </div>
+                        <div class="col-12">
+                            <InputText class="form-control" @bind-Value="User.UserName" placeholder="Введите имя пользователя"></InputText>
+                            <ValidationMessage For="(() => User.UserName)"></ValidationMessage>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-group row">
+                        <div class="col-6">
+                            <label>Пароль</label>
+                        </div>
+                        <div class="col-12">
+                            <InputText class="form-control" @bind-Value="User.Password" placeholder="Введите пароль"></InputText>
+                            <ValidationMessage For="(() => User.Password)"></ValidationMessage>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="col-12">
+                    <button class="btn btn-primary" type="submit">Войти</button>
+                    <a class="btn btn-danger" href="/auth/register">Регистрация</a>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private UserDto User { get; set; } = new UserDto();
+    private IEnumerable<GroupDto> Groups { get; set; } = new List<GroupDto>();
+
+    private int selectedGroupId;
+    private HttpClient client;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        client = new HttpClient();
+        Groups = await client.GetFromJsonAsync<IEnumerable<GroupDto>>("http://localhost:5000/api/groups");
+        selectedGroupId = Groups.FirstOrDefault().Id;
+    }
+
+    public async Task LoginUser()
+    {
+        var result = await client.PostAsJsonAsync($"http://localhost:5000/auth/login", User);
+
+        if (result.IsSuccessStatusCode)
+        {
+            MainLayout.CurrentUser = User;
+            navigationManager.NavigateTo("/");
+        }
+        else
+            navigationManager.NavigateTo("/auth/login");
+    }
+}

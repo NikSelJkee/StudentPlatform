@@ -1,0 +1,56 @@
+﻿@page "/tests/{tagId:int}/editMaterial/{materialId:int}"
+
+@inject NavigationManager navigationManager
+
+<div class="row">
+    <div class="col-6">
+        <EditForm Model="Material" OnValidSubmit="Update">
+            <div class="col-6">
+                <h3>Редактировать материал</h3>
+            </div>
+            <div>
+                <DataAnnotationsValidator />
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <InputText class="form-control" @bind-Value="Material.Name" placeholder="Введите название материала"></InputText>
+                        <ValidationMessage For="(() => Material.Name)"></ValidationMessage>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-primary" type="submit">Принять</button>
+                        <a class="btn btn-danger" href="tests/createTag">Назад</a>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int TagId { get; set; }
+
+    [Parameter]
+    public int MaterialId { get; set; }
+
+    private MaterialForUpdateDto Material = new MaterialForUpdateDto();
+
+    private HttpClient client = new HttpClient();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        client = new HttpClient();
+        var material = await client.GetFromJsonAsync<MaterialDto>($"http://localhost:5000/api/tags/{TagId}/materials/{MaterialId}");
+
+        Material.Name = material.Name;
+    }
+
+    public async Task Update()
+    {
+        var result = await client.PutAsJsonAsync<MaterialForUpdateDto>($"http://localhost:5000/api/tags/{TagId}/materials/{MaterialId}", Material);
+
+        if (result.IsSuccessStatusCode)
+            navigationManager.NavigateTo($"tests/{MaterialId}", true);
+    }
+}

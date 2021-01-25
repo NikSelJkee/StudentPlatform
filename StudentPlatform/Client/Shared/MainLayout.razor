@@ -1,0 +1,41 @@
+﻿@inherits LayoutComponentBase
+
+@inject NavigationManager navigationManager
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <div class="main">
+        <div class="top-row px-4">
+            @if (CurrentUser == null)
+            {
+                <div class="top-row">
+                    <a class="btn btn-link ml-md-auto" href="/auth/login">Войти</a>
+                </div>
+            }
+            else
+            {
+                <div class="top-row">
+                    <h3>Здравствуйте, @CurrentUser.UserName</h3>
+                    <button type="button" class="btn btn-link ml-md-auto" @onclick="@LogoutClick">Выйти</button>
+                </div>
+            }
+        </div>
+
+        <div class="content px-4">
+            @Body
+        </div>
+    </div>
+</div>
+
+@code{
+    public static UserDto CurrentUser = null;
+
+    private void LogoutClick()
+    {
+        CurrentUser = null;
+        navigationManager.NavigateTo("/", true);
+    }
+}

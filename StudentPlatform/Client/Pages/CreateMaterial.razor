@@ -1,0 +1,81 @@
+﻿@page "/tests/{tagId:int}"
+
+@inject NavigationManager navigationManager
+
+<div class="row">
+    <div class="col-6">
+        <EditForm Model="Material" OnValidSubmit="Create">
+            <div class="col-6">
+                <h3>@Tag.Name</h3>
+            </div>
+            <div>
+                <DataAnnotationsValidator />
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <InputText class="form-control" @bind-Value="Material.Name" placeholder="Введите название темы"></InputText>
+                        <ValidationMessage For="(() => Material.Name)"></ValidationMessage>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-primary" type="submit">Добавить</button>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название темы</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var material in Materials)
+        {
+            <tr>
+                <td><a href="tests/@TagId/@material.Id">@material.Name</a></td>
+                <td>
+                    <a class="btn btn-primary" href="tests/@TagId/editMaterial/@material.Id">Редактировать</a>
+                    <a class="btn btn-danger text-white" href="#" @onclick="(() => Delete(material.Id))">Удалить</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public int TagId { get; set; }
+
+    private TagDto Tag = new TagDto();
+    private MaterialForCreationDto Material = new MaterialForCreationDto();
+    private IEnumerable<MaterialDto> Materials { get; set; } = new List<MaterialDto>();
+
+    private HttpClient client = new HttpClient();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        client = new HttpClient();
+        Tag = await client.GetFromJsonAsync<TagDto>($"http://localhost:5000/api/tags/{TagId}");
+        Materials = await client.GetFromJsonAsync<IEnumerable<MaterialDto>>($"http://localhost:5000/api/tags/{TagId}/materials");
+    }
+
+    public async Task Create()
+    {
+        var result = await client.PostAsJsonAsync($"http://localhost:5000/api/tags/{TagId}/materials", Material);
+
+        if (result.IsSuccessStatusCode)
+            navigationManager.NavigateTo($"tests/{TagId}", true);
+    }
+
+    public async Task Delete(int materialId)
+    {
+        var result = await client.DeleteAsync($"http://localhost:5000/api/tags/{TagId}/materials/{materialId}");
+
+        if (result.IsSuccessStatusCode)
+            navigationManager.NavigateTo($"tests/{TagId}", true);
+    }
+}

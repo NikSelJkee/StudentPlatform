@@ -1,0 +1,180 @@
+﻿@page "/testing/{tagId:int}/{materialId:int}"
+
+@inject NavigationManager navigationManager
+
+<div class="row">
+    <div class="col-6">
+        <h3>@Material.Name</h3>
+        <p>Вопрос @(steps + 1)/@(Tests.Count)</p>
+    </div>
+</div>
+@if (isFinish)
+{
+    <p>Ваша оценка: @rating</p>
+}
+else
+{
+    @if (Tests.Count() > 0)
+    {
+        <div class="row">
+            <div class="col-6">
+                <p>@(Tests[steps].Question)</p>
+            </div>
+        </div>
+        @for (int i = 0; i < 6; i++)
+        {
+            switch (i)
+            {
+                case 0:
+                    if (!string.IsNullOrWhiteSpace(Tests[steps].Answer1))
+                    {
+                        <div class="row">
+                            <div class="col-6">
+                                <label>
+                                    <input type="radio" value="@(Tests[steps].Answer1)" name="group" @onclick="(() => selectedAswer = Tests[steps].Answer1)" /> @(Tests[steps].Answer1)
+                                </label>
+                            </div>
+                        </div>
+                    }
+                    break;
+                case 1:
+                    if (!string.IsNullOrWhiteSpace(Tests[steps].Answer2))
+                    {
+                        <div class="row">
+                            <div class="col-6">
+                                <label>
+                                    <input type="radio" value="@(Tests[steps].Answer2)" name="group" @onclick="(() => selectedAswer = Tests[steps].Answer2)" /> @(Tests[steps].Answer2)
+                                </label>
+                            </div>
+                        </div>
+                    }
+                    break;
+                case 2:
+                    if (!string.IsNullOrWhiteSpace(Tests[steps].Answer3))
+                    {
+                        <div class="row">
+                            <div class="col-6">
+                                <label>
+                                    <input type="radio" value="@(Tests[steps].Answer3)" name="group" @onclick="(() => selectedAswer = Tests[steps].Answer3)" /> @(Tests[steps].Answer3)
+                                </label>
+                            </div>
+                        </div>
+                    }
+                    break;
+                case 3:
+                    if (!string.IsNullOrWhiteSpace(Tests[steps].Answer4))
+                    {
+                        <div class="row">
+                            <div class="col-6">
+                                <label>
+                                    <input type="radio" value="@(Tests[steps].Answer4)" name="group" @onclick="(() => selectedAswer = Tests[steps].Answer4)" /> @(Tests[steps].Answer4)
+                                </label>
+                            </div>
+                        </div>
+                    }
+                    break;
+                case 4:
+                    if (!string.IsNullOrWhiteSpace(Tests[steps].Answer5))
+                    {
+                        <div class="row">
+                            <div class="col-6">
+                                <label>
+                                    <input type="radio" value="@(Tests[steps].Answer5)" name="group" @onclick="(() => selectedAswer = Tests[steps].Answer5)" /> @(Tests[steps].Answer5)
+                                </label>
+                            </div>
+                        </div>
+                    }
+                    break;
+                case 5:
+                    if (!string.IsNullOrWhiteSpace(Tests[steps].Answer6))
+                    {
+                        <div class="row">
+                            <div class="col-6">
+                                <label>
+                                    <input type="radio" value="@(Tests[steps].Answer6)" name="group" @onclick="(() => selectedAswer = Tests[steps].Answer6)" /> @(Tests[steps].Answer6)
+                                </label>
+                            </div>
+                        </div>
+                    }
+                    break;
+            }
+        }
+        <div class="row">
+            <div class="col-6">
+                @if (steps == Tests.Count() - 1)
+                {
+                    <button class="btn btn-primary" @onclick="(() => NextQuestion(selectedAswer))">Завершить тест</button>
+                }
+                else
+                {
+                    <button class="btn btn-primary" @onclick="(() => NextQuestion(selectedAswer))">Следующий вопрос</button>
+                }
+            </div>
+        </div>
+    }
+}
+
+
+@code {
+    [Parameter]
+    public int TagId { get; set; }
+
+    [Parameter]
+    public int MaterialId { get; set; }
+
+    private TagDto Tag = new TagDto();
+    private MaterialDto Material = new MaterialDto();
+    private List<TestDto> Tests = new List<TestDto>();
+
+    private HttpClient client = new HttpClient();
+
+    private int steps = 0;
+    private string selectedAswer;
+    private bool test;
+    private int correctAnswer = 0;
+    private float rating = 0;
+    private bool isFinish = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        client = new HttpClient();
+        Tag = await client.GetFromJsonAsync<TagDto>($"http://localhost:5000/api/tags/{TagId}");
+        Material = await client.GetFromJsonAsync<MaterialDto>($"http://localhost:5000/api/tags/{TagId}/materials/{MaterialId}");
+        Tests = await client.GetFromJsonAsync<List<TestDto>>($"http://localhost:5000/api/tags/{TagId}/materials/{MaterialId}/tests");
+    }
+
+    private void NextQuestion(string answer)
+    {
+        if (steps == Tests.Count() - 1)
+        {
+            if (answer.Equals(Tests[steps].CorrectAnswer))
+            {
+                correctAnswer++;
+            }
+
+            if (correctAnswer > 0)
+            {
+                float percent = ((float)correctAnswer / (float)Tests.Count()) * 100;
+                if (percent >= 80.0 && percent <= 100.0)
+                    rating = 5;
+                else if (percent >= 60.0 && percent <= 79.0)
+                    rating = 4;
+                else if (percent >= 40.0 && percent <= 50.0)
+                    rating = 3;
+                else
+                    rating = 2;
+            }
+            else
+                rating = 2;
+            isFinish = true;
+        }
+        else
+        {
+            if (answer.Equals(Tests[steps].CorrectAnswer))
+            {
+                correctAnswer++;
+            }
+            steps++;
+        }
+    }
+}

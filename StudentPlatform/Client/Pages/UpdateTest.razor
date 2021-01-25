@@ -1,0 +1,139 @@
+﻿@page "/tests/{tagId:int}/{materialId:int}/editTest/{testId:int}"
+
+@inject NavigationManager navigationManager
+
+<div class="row">
+    <div class="col-6">
+        <EditForm Model="Test" OnValidSubmit="Create">
+            <div class="col-6">
+                <h3>Редактировать вопрос</h3>
+            </div>
+            <div class="row px-2 mx-2 border">
+                <DataAnnotationsValidator />
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label>Описание вопроса</label>
+                    </div>
+                    <div class="col-12">
+                        <Microsoft.AspNetCore.Components.Forms.InputTextArea class="form-control" @bind-Value="Test.Question" placeholder="Введите название вопроса"></Microsoft.AspNetCore.Components.Forms.InputTextArea>
+                        <ValidationMessage For="(() => Test.Question)"></ValidationMessage>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label>Первый ответ</label>
+                    </div>
+                    <div class="col-12">
+                        <Microsoft.AspNetCore.Components.Forms.InputTextArea class="form-control" @bind-Value="Test.Answer1" placeholder="Введите первый ответ"></Microsoft.AspNetCore.Components.Forms.InputTextArea>
+                        <ValidationMessage For="(() => Test.Answer1)"></ValidationMessage>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label>Второй ответ</label>
+                    </div>
+                    <div class="col-12">
+                        <Microsoft.AspNetCore.Components.Forms.InputTextArea class="form-control" @bind-Value="Test.Answer2" placeholder="Введите второй ответ"></Microsoft.AspNetCore.Components.Forms.InputTextArea>
+                        <ValidationMessage For="(() => Test.Answer2)"></ValidationMessage>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label>Третий ответ</label>
+                    </div>
+                    <div class="col-12">
+                        <Microsoft.AspNetCore.Components.Forms.InputTextArea class="form-control" @bind-Value="Test.Answer3" placeholder="Введите третий ответ"></Microsoft.AspNetCore.Components.Forms.InputTextArea>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label>Четвертый ответ</label>
+                    </div>
+                    <div class="col-12">
+                        <Microsoft.AspNetCore.Components.Forms.InputTextArea class="form-control" @bind-Value="Test.Answer4" placeholder="Введите четвертый ответ"></Microsoft.AspNetCore.Components.Forms.InputTextArea>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label>Пятый ответ</label>
+                    </div>
+                    <div class="col-12">
+                        <Microsoft.AspNetCore.Components.Forms.InputTextArea class="form-control" @bind-Value="Test.Answer5" placeholder="Введите пятый ответ"></Microsoft.AspNetCore.Components.Forms.InputTextArea>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label>Шестой ответ</label>
+                    </div>
+                    <div class="col-12">
+                        <Microsoft.AspNetCore.Components.Forms.InputTextArea class="form-control" @bind-Value="Test.Answer6" placeholder="Введите шестой ответ"></Microsoft.AspNetCore.Components.Forms.InputTextArea>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <label>Правильный ответ</label>
+                    </div>
+                    <div class="col-12">
+                        <Microsoft.AspNetCore.Components.Forms.InputTextArea class="form-control" @bind-Value="Test.CorrectAnswer" placeholder="Введите правильный ответ"></Microsoft.AspNetCore.Components.Forms.InputTextArea>
+                        <ValidationMessage For="(() => Test.CorrectAnswer)"></ValidationMessage>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="form-group row">
+                    <div class="col-3">
+                        <button class="btn btn-primary" type="submit">Принять</button>
+                    </div>
+                    <div class="col-3">
+                        <a class="btn btn-danger" href="tests/@TagId/@MaterialId">Назад</a>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int TagId { get; set; }
+
+    [Parameter]
+    public int MaterialId { get; set; }
+
+    [Parameter]
+    public int TestId { get; set; }
+
+    private TestDto Test = new TestDto();
+
+    private HttpClient client;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        client = new HttpClient();
+        Test = await client.GetFromJsonAsync<TestDto>($"http://localhost:5000/api/tags/{TagId}/materials/{MaterialId}/tests/{TestId}");
+    }
+
+    public async Task Create()
+    {
+        var result = await client.PostAsJsonAsync($"http://localhost:5000/api/tags/{TagId}/materials/{MaterialId}/tests", Test);
+
+        if (result.IsSuccessStatusCode)
+            navigationManager.NavigateTo($"tests/{TagId}/{MaterialId}");
+    }
+}

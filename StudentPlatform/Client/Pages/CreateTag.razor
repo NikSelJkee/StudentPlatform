@@ -1,0 +1,76 @@
+﻿@page "/tests/createTag"
+
+@inject NavigationManager navigationManager
+
+<div class="row">
+    <div class="col-6">
+        <EditForm Model="Tag" OnValidSubmit="Create">
+            <div class="col-6">
+                <h3>Создать дисциплину</h3>
+            </div>
+            <div>
+                <DataAnnotationsValidator />
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <InputText class="form-control" @bind-Value="Tag.Name" placeholder="Введите название дисципилны"></InputText>
+                        <ValidationMessage For="(() => Tag.Name)"></ValidationMessage>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-primary" type="submit">Добавить</button>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название дисциплины</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var tag in Tags)
+        {
+            <tr>
+                <td><a href="tests/@tag.Id">@tag.Name</a></td>
+                <td>
+                    <a class="btn btn-primary" href="tests/editTag/@tag.Id">Редактировать</a>
+                    <a class="btn btn-danger text-white" href="#" @onclick="(() => Delete(tag.Id))">Удалить</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private TagForCreationDto Tag = new TagForCreationDto();
+    private IEnumerable<TagDto> Tags { get; set; } = new List<TagDto>();
+
+    private HttpClient client = new HttpClient();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        client = new HttpClient();
+        Tags = await client.GetFromJsonAsync<IEnumerable<TagDto>>("http://localhost:5000/api/tags");
+    }
+
+    public async Task Create()
+    {
+        var result = await client.PostAsJsonAsync($"http://localhost:5000/api/tags", Tag);
+
+        if (result.IsSuccessStatusCode)
+            navigationManager.NavigateTo("tests/createTag", true);
+    }
+
+    public async Task Delete(int tagId)
+    {
+        var result = await client.DeleteAsync($"http://localhost:5000/api/tags/{tagId}");
+
+        if (result.IsSuccessStatusCode)
+            navigationManager.NavigateTo("tests/createTag", true);
+    }
+}

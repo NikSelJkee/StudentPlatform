@@ -1,0 +1,46 @@
+﻿@page "/testing/{tagId:int}/selectMaterial"
+
+@inject NavigationManager navigationManager
+
+<div class="row">
+    <div class="col-6">
+        <h3>@Tag.Name</h3>
+    </div>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название темы</th>
+            <th>Оценка</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var material in Materials)
+        {
+            <tr>
+                <td><a href="testing/@TagId/@material.Id">@material.Name</a></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public int TagId { get; set; }
+
+    private TagDto Tag = new TagDto();
+    private MaterialForCreationDto Material = new MaterialForCreationDto();
+    private IEnumerable<MaterialDto> Materials { get; set; } = new List<MaterialDto>();
+    private IEnumerable<Rating> Ratings { get; set; } = new List<Rating>();
+
+    private HttpClient client = new HttpClient();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        client = new HttpClient();
+        Tag = await client.GetFromJsonAsync<TagDto>($"http://localhost:5000/api/tags/{TagId}");
+        Materials = await client.GetFromJsonAsync<IEnumerable<MaterialDto>>($"http://localhost:5000/api/tags/{TagId}/materials");
+        //Ratings = await client.GetFromJsonAsync<IEnumerable<Rating>>($"http://localhost:5000/api/groups/{MainLayout.CurrentUser.GroupId}/users/{MainLayout.CurrentUser.Id}/ratings");
+    }
+}

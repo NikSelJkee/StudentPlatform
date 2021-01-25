@@ -1,0 +1,67 @@
+﻿@page "/tests/{tagId:int}/{materialId:int}"
+
+@inject NavigationManager navigationManager
+
+<div class="row">
+    <div class="col-6">
+            <div class="col-6">
+                <h3>@Material.Name</h3>
+            </div>
+
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <a class="btn btn-primary" href="tests/@TagId/@MaterialId/createTest">Добавить вопрос</a>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Название вопроса</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var test in TestsCollection)
+        {
+            <tr>
+                <td><a href="tests/@TagId/@MaterialId/@test.Id">@test.Question</a></td>
+                <td>
+                    <a class="btn btn-primary" href="tests/@TagId/@MaterialId/editTest/@test.Id">Редактировать</a>
+                    <a class="btn btn-danger text-white" href="#" @onclick="(() => Delete(test.Id))">Удалить</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public int TagId { get; set; }
+
+    [Parameter]
+    public int MaterialId { get; set; }
+
+    private MaterialDto Material = new MaterialDto();
+    private IEnumerable<TestDto> TestsCollection { get; set; } = new List<TestDto>();
+
+    private HttpClient client = new HttpClient();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        client = new HttpClient();
+        Material = await client.GetFromJsonAsync<MaterialDto>($"http://localhost:5000/api/tags/{TagId}/materials/{MaterialId}");
+        TestsCollection = await client.GetFromJsonAsync<IEnumerable<TestDto>>($"http://localhost:5000/api/tags/{TagId}/materials/{MaterialId}/tests");
+    }
+
+    public async Task Delete(int testId)
+    {
+        var result = await client.DeleteAsync($"http://localhost:5000/api/tags/{TagId}/materials/{MaterialId}/tests/{testId}");
+
+        if (result.IsSuccessStatusCode)
+            navigationManager.NavigateTo($"tests/{TagId}/{MaterialId}", true);
+    }
+}

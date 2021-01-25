@@ -1,0 +1,53 @@
+﻿@page "/students/{groupId:int}"
+
+@inject NavigationManager navigationManager
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ФИО</th>
+            <th>Имя пользователя</th>
+            <th>Электронная почта</th>
+            <th>Пароль</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Users)
+        {
+            <tr>
+                <td>@user.FullName</td>
+                <td>@user.UserName</td>
+                <td>@user.Email</td>
+                <td>@user.Password</td>
+                <td>
+                    <a class="btn btn-primary" href="students/@GroupId/editStudent/@user.Id">Редактировать</a>
+                    <a class="btn btn-danger text-white" href="#" @onclick="(() => Delete(user.Id))">Удалить</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public int GroupId { get; set; }
+
+    private List<UserDto> Users = new List<UserDto>();
+    private HttpClient client;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        client = new HttpClient();
+
+        Users = await client.GetFromJsonAsync<List<UserDto>>($"http://localhost:5000/api/groups/{GroupId}/users");
+    }
+
+    public async Task Delete(string userId)
+    {
+        var result = await client.DeleteAsync($"http://localhost:5000/api/groups/{GroupId}/users/{userId}");
+
+        if (result.IsSuccessStatusCode)
+            navigationManager.NavigateTo($"students/{GroupId}", true);
+    }
+}

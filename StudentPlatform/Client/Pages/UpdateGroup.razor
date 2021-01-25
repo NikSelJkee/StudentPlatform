@@ -1,0 +1,53 @@
+﻿@page "/students/editGroup/{groupId:int}"
+
+@inject NavigationManager navigationManager
+
+<div class="row">
+    <div class="col-6">
+        <EditForm Model="Group" OnValidSubmit="Update">
+            <div class="col-6">
+                <h3>Редактировать группу</h3>
+            </div>
+            <div class="row px-2 mx-2 border">
+                <DataAnnotationsValidator />
+            </div>
+            <div class="col-12">
+                <div class="form-group row">
+                    <div class="col-6">
+                        <InputText class="form-control" @bind-Value="Group.Name" placeholder="Введите название группы"></InputText>
+                        <ValidationMessage For="(() => Group.Name)"></ValidationMessage>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-primary" type="submit">Принять</button>
+                        <a class="btn btn-danger" href="students/createGroup">Назад</a>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int GroupId { get; set; }
+
+    private GroupForUpdateDto Group = new GroupForUpdateDto();
+
+    private HttpClient client = new HttpClient();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        client = new HttpClient();
+        var group = await client.GetFromJsonAsync<GroupDto>($"http://localhost:5000/api/groups/{GroupId}");
+
+        Group.Name = group.Name;
+    }
+
+    public async Task Update()
+    {
+        var result = await client.PutAsJsonAsync<GroupForUpdateDto>($"http://localhost:5000/api/groups/{GroupId}", Group);
+
+        if (result.IsSuccessStatusCode)
+            navigationManager.NavigateTo("students/createGroup", true);
+    }
+}

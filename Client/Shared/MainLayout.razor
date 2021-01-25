@@ -1,0 +1,24 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    <div style="background-image: url(/images/navmenubg.png), linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);" class="sidebar">
+        <NavMenu />
+    </div>
+
+    <div class="main">
+        <div class="top-row px-4">
+            <AuthorizeView>
+                <Authorized>
+                    <a href="/auth/register" target="_blank" class="ml-md-auto">Выйти</a>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/auth/login" target="_blank" class="ml-md-auto">Войти</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <div class="content px-4">
+            @Body
+        </div>
+    </div>
+</div>
